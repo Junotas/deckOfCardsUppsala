@@ -1,0 +1,32 @@
+Programmet CardTest testar utritning av kort. För att det ska gå att
+köra även om programmet inte hittar filerna med bilder har jag lagt in
+utritning av korten med siffror och bokstäver. Testkör detta program
+först.
+
+Det enkla spelet "SimpleGame" har fem högar.
+
+På första raden, talong och kasthög.
+
+På andra raden, en hög som bara accepterar röda kort och en hög som
+bara accepterar ett kort som är av en annan färg än det föregående.
+
+På tredje raden, en hög som bara accepterar kort som är ett steg högre
+än det föregående (oavsett färg).
+
+Det finns inga andra begränsningar. Du kan flytta kort från de tre
+sista högarna och lägga på en av de andra. Du kan inte flytta ett kort
+tillbaka till kasthögen.
+
+Man väljer ett kort genom att klicka på det. Då ritas en ram runt
+kortet. Om du vill flytta kortet, klicka på en valfri hög. Om du
+ångrar ditt val, klicka nånstans på bordet.
+
+När man klickar på talongen (stock pile) vänds översta kortet upp,
+läggs på kasthögen och markeras som valt. Om du klickar på talongen
+tills den är tom och sen klickar en gång till flyttas korten från
+kasthögen till talongen.
+
+Varje hög implementeras av en egen klass. Det finns även en klass
+"Card" som representerar ett kort, "Deck" som tar hand om kortleken,
+"Pile" som representerar en abstrakt hög, och "Control" som hanterar
+två knappar.
