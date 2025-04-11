@@ -3,81 +3,113 @@ import java.awt.event.*;
 import java.util.*;
 import javax.swing.*;
 
-class SimpleGame extends JPanel implements MouseListener,Game {
+public class SimpleGame extends JPanel implements MouseListener, Game {
 
-    private ArrayList<Pile> piles = new ArrayList<Pile>();
+    // Konstanter för layouten
+    static final int GAP = 10;
+    static final int MARGIN = 20;
+    static final int CARD_WIDTH = Card.width;
+    static final int CARD_HEIGHT = Card.height;
 
-    private Pile stockPile;
-    private ThrowPile throwPile;
-    private Pile redPile;
-    private Pile otherPile;
-    private Pile upPile;
-    
-    static final int cardWidth = Card.width;
-    static final int cardHeight = Card.height;
+    // Högar som används i spelet
+    private StockPile stockPile;
+    private ThrowPile wastePile; // Slänghög
+    private ArrayList<FoundationPile> foundationPiles = new ArrayList<>();
+    private ArrayList<TableauPile> tableauPiles = new ArrayList<>();
+    private ArrayList<Pile> allPiles = new ArrayList<>();
 
-    static final int xSpace = cardWidth + 10;
-    static final int ySpace = cardHeight + 10;
-    static final int tab = 10;
-    
     private Pile selected;
-    
-    public SimpleGame () {
 
-        throwPile = new ThrowPile(xSpace*2, ySpace);
-        stockPile = new StockPile(xSpace*1, ySpace, throwPile);
-        redPile = new RedPile(xSpace*1, ySpace*2);
-        otherPile = new OtherPile(xSpace*2, ySpace*2);
-        upPile =    new UpPile(xSpace*2, ySpace*3);
-        
-        piles.add(stockPile);
-        piles.add(throwPile);
-        piles.add(redPile);
-        piles.add(otherPile);
-        piles.add(upPile);
-        
-        Deck d = new Deck ();
-        d.shuffle();
-        for (Card c : d.cardSet()) {
+    public SimpleGame() {
+        // Placering: Stock och Waste
+        int stockX = MARGIN;
+        int stockY = MARGIN;
+        stockPile = new StockPile(stockX, stockY, null); // Waste referens sätts senare
+        int wasteX = stockX + CARD_WIDTH + GAP;
+        int wasteY = MARGIN;
+        wastePile = new ThrowPile(wasteX, wasteY);
+        stockPile.setWastePile(wastePile);
+
+        // Esshögar (Foundation) – 8 stycken, placeras från vänster till höger på övre raden
+        int foundationStartX = wasteX + CARD_WIDTH + GAP;
+        for (int i = 0; i < 8; i++) {
+            int fx = foundationStartX + i * (CARD_WIDTH + GAP);
+            int fy = MARGIN;
+            FoundationPile fPile = new FoundationPile(fx, fy);
+            foundationPiles.add(fPile);
+        }
+
+        // Bygghögar (Tableau) – 10 stycken, placeras på en rad nedanför stock/grundraden
+        int tableauY = MARGIN + CARD_HEIGHT + 2 * GAP;
+        for (int i = 0; i < 10; i++) {
+            int tx = MARGIN + i * (CARD_WIDTH + GAP);
+            TableauPile tPile = new TableauPile(tx, tableauY);
+            tableauPiles.add(tPile);
+        }
+
+        // Samla alla högar för att underlätta ritning och klickhantering
+        allPiles.add(stockPile);
+        allPiles.add(wastePile);
+        allPiles.addAll(foundationPiles);
+        allPiles.addAll(tableauPiles);
+
+        // Skapa och blanda kortleken (104 kort)
+        Deck deck = new Deck();
+        deck.shuffle();
+        ArrayList<Card> cards = deck.cardSet();
+
+        // Dela ut de 40 översta korten (4 kort per Tableau) – dessa vänds upp
+        for (int round = 0; round < 4; round++) {
+            for (int i = 0; i < tableauPiles.size(); i++) {
+                Card c = cards.remove(0);
+                c.turnUp(); // Kortet blir synligt
+                tableauPiles.get(i).add(c);
+            }
+        }
+
+        // Resterande 64 kort går till Stock (ligger med baksidan upp)
+        while (!cards.isEmpty()) {
+            Card c = cards.remove(0);
+            if(c.isFaceUp()) {  // Se till att korten i Stock är nedvända.
+                c.flip();
+            }
             stockPile.add(c);
         }
+
+        setBackground(Color.GREEN);
+        addMouseListener(this);
     }
-            
-    public void paintComponent (Graphics g) {
+
+    public void paintComponent(Graphics g) {
         super.paintComponent(g);
-
-        g.setColor( Color.GREEN );
-        
-        g.fillRect( 0, 0, getWidth(), getHeight() );
-
-        for (Pile p : piles) {
+        // Rita alla högar
+        for (Pile p : allPiles) {
             p.draw(g, selected);
         }
     }
-    
-    public void mouseClicked (MouseEvent e) { 
-	    
+
+    public void mouseClicked(MouseEvent e) {
         int x = e.getX();
         int y = e.getY();
 
-        for (Pile p : piles) {
-            if (p.contains(x,y)) {
+        // Kolla vilken hög som klickats
+        for (Pile p : allPiles) {
+            if (p.contains(x, y)) {
                 p.click(this);
                 repaint();
-                return; // only click on one pile
+                return;
             }
         }
-        // Allow the user to unselect by clicking on the board
-        setSelected(null); 
+        // Om man klickar utanför en hög avmarkeras den valda
+        setSelected(null);
         repaint();
-    }                            
+    }
 
+    public void mouseEntered(MouseEvent e) {}
+    public void mouseExited(MouseEvent e) {}
+    public void mousePressed(MouseEvent e) {}
+    public void mouseReleased(MouseEvent e) {}
 
-    public void mouseEntered(MouseEvent e){}
-    public void mouseExited(MouseEvent e){}
-    public void mousePressed(MouseEvent e){}
-    public void mouseReleased(MouseEvent e){}
-            
     public void setSelected(Pile p) {
         selected = p;
     }
@@ -86,21 +118,17 @@ class SimpleGame extends JPanel implements MouseListener,Game {
         return selected;
     }
 
-    
-    static public void main(String[] args) { 
-        SimpleGame p = new SimpleGame();
-        JFrame f = new JFrame();
+    public static void main(String[] args) {
+        SimpleGame gamePanel = new SimpleGame();
+        JFrame frame = new JFrame("De 40 rövarna");
+        frame.getContentPane().setLayout(new BorderLayout());
 
-        f.getContentPane().setLayout(new BorderLayout());
-        f.getContentPane().add(new Control(), BorderLayout.NORTH);
-        f.getContentPane().add(p, BorderLayout.CENTER);
+        // Lägg eventuellt till en kontrollpanel om så önskas
+        frame.getContentPane().add(new Control(), BorderLayout.NORTH);
+        frame.getContentPane().add(gamePanel, BorderLayout.CENTER);
 
-        p.addMouseListener(p);
-        
-	f.setBounds(100, 100, 800, 500);
-        
-        f.setDefaultCloseOperation(f.EXIT_ON_CLOSE);
-        f.setVisible(true);
-
+        frame.setBounds(100, 100, 1000, 600);
+        frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        frame.setVisible(true);
     }
 }
