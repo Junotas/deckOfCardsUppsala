@@ -1,29 +1,31 @@
 class StockPile extends Pile {
 
-    // The pile containing all cards at the start of the game.
+    // Högen med de kvarvarande korten (Stock) håller ett referens till slänghögen.
+    private ThrowPile wastePile;
 
-    private ThrowPile throwPile;
-
-    public StockPile(int x, int y, ThrowPile throwPile) {
-        super(x,y);
-        this.throwPile = throwPile;
+    public StockPile(int x, int y, ThrowPile wastePile) {
+        super(x, y);
+        this.wastePile = wastePile;
     }
-    
+
+    public void setWastePile(ThrowPile wastePile) {
+        this.wastePile = wastePile;
+    }
+
     public void click(Game g) {
         Pile selected = g.getSelected();
-        if (selected!=null) {
+        if (selected != null) {
             g.setSelected(null);
         }
 
         Card c = top();
-        if (c!=null) {
-            c.flip();
-            throwPile.add(pop());
-            g.setSelected(throwPile);
-        }
-        else {
-            throwPile.turn(this);
+        if (c != null) {
+            c.flip(); // Vänd kortet så att det blir synligt
+            wastePile.add(pop());
+            g.setSelected(wastePile);
+        } else {
+            // Om Stock är tom, återvinn korten från wastePile
+            wastePile.turn(this);
         }
     }
 }
-
