@@ -25,16 +25,6 @@ Det här projektet är en implementation av patiensen **De 40 Rövarna** i Java 
 - `Card` representerar ett spelkort med bild, svit och rang.
 - `SimpleGame` hanterar GUI och speluppställning.
 
-## Starta programmet
-För att köra spelet:
-
-```bash
-javac *.java
-java SimpleGame
-```
-
-(Alla `.java`-filer ska ligga i samma mapp.)
-
 ## Tekniker
 - Java 22
 - Swing och AWT för GUI
